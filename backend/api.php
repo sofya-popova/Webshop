@@ -1,5 +1,4 @@
 <?php
-// api.php
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *'); // Allow requests from any origin
 
@@ -12,7 +11,7 @@ if ($apiKey !== API_KEY) {
 }
 
 // URL of the e-commerce site to scrape
-$url = 'https://okidoki.ee';
+$url = 'https://www.okidoki.ee';
 
 // Initialize cURL
 $ch = curl_init($url);
@@ -20,18 +19,28 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $response = curl_exec($ch);
 curl_close($ch);
 
+if (!$response) {
+    echo json_encode(['error' => 'Failed to fetch website']);
+    exit;
+}
+
 // Parse HTML response
 $dom = new DOMDocument();
 @$dom->loadHTML($response); // Suppress errors due to malformed HTML
 
-// Extract categories
-$categories = [];
-$links = $dom->getElementsByTagName('a'); // Adjust this selector based on the actual HTML structure
+// Initialize XPath to navigate the DOM
+$xpath = new DOMXPath($dom);
 
-foreach ($links as $link) {
-    $category = trim($link->textContent);
-    if (!empty($category) && !in_array($category, $categories)) {
-        $categories[] = $category; // Collect unique categories
+// Find all <li> elements that are children of <ul id="hc">
+$categoryItems = $xpath->query('//ul[@id="hc"]/li');
+
+// Prepare an array to store the categories
+$categories = [];
+
+foreach ($categoryItems as $item) {
+    $category = trim($item->getAttribute('class')); // Extract the class name as the category name
+    if (!empty($category)) {
+        $categories[] = $category;
     }
 }
 

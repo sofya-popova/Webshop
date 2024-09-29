@@ -1,4 +1,3 @@
-// app.js
 
 document.getElementById('fetchCategories').addEventListener('click', async () => {
     try {
